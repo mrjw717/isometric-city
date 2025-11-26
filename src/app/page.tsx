@@ -255,13 +255,6 @@ export default function HomePage() {
       <header className="relative z-10 py-6 px-8">
         <nav className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/70 rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
-                <polygon points="12,2 22,8 12,14 2,8" />
-                <polygon points="2,8 12,14 12,22 2,16" opacity="0.7" />
-                <polygon points="22,8 12,14 12,22 22,16" opacity="0.4" />
-              </svg>
-            </div>
             <span className="text-xl font-bold tracking-tight">ISOCITY</span>
           </div>
           <div className="flex items-center gap-4">

@@ -76,7 +76,7 @@ const ImageBuilding: React.FC<{
         style={{
           objectFit: 'contain',
           position: 'absolute',
-          bottom: -scaledHeight * 0.25,
+          bottom: -scaledHeight * 0.1,
           left: '50%',
           transform: 'translateX(-50%)',
         }}
@@ -189,26 +189,141 @@ export const WaterTile: React.FC<BuildingProps> = ({ size = TILE_WIDTH }) => {
   );
 };
 
-// Road tile - flat
-export const RoadTile: React.FC<BuildingProps> = ({ size = TILE_WIDTH }) => {
+// Road adjacency - which directions have connected roads
+export interface RoadAdjacency {
+  north: boolean;  // tile at x-1 (top-left edge in isometric)
+  east: boolean;   // tile at y-1 (top-right edge in isometric)
+  south: boolean;  // tile at x+1 (bottom-right edge in isometric)
+  west: boolean;   // tile at y+1 (bottom-left edge in isometric)
+}
+
+// Road tile - adapts to adjacent roads
+export const RoadTile: React.FC<BuildingProps & { adjacency?: RoadAdjacency }> = ({ 
+  size = TILE_WIDTH,
+  adjacency = { north: false, east: false, south: false, west: false }
+}) => {
   const w = size;
   const h = getTileHeight(w);
   
+  const { north, east, south, west } = adjacency;
+  
+  // Tile corner points (isometric diamond)
+  // Top: (w/2, 0), Right: (w, h/2), Bottom: (w/2, h), Left: (0, h/2)
+  
+  // Road width as fraction of edge length
+  const roadW = 0.4;
+  
+  // Edge midpoints for road connections
+  // North edge (top-left): from (w/2, 0) to (0, h/2)
+  const northMid = { x: w * 0.25, y: h * 0.25 };
+  // East edge (top-right): from (w/2, 0) to (w, h/2)
+  const eastMid = { x: w * 0.75, y: h * 0.25 };
+  // South edge (bottom-right): from (w, h/2) to (w/2, h)
+  const southMid = { x: w * 0.75, y: h * 0.75 };
+  // West edge (bottom-left): from (0, h/2) to (w/2, h)
+  const westMid = { x: w * 0.25, y: h * 0.75 };
+  
+  // Center of tile
+  const center = { x: w * 0.5, y: h * 0.5 };
+  
+  // Calculate road segments as polygons extending from center to edges
+  const roadSegments: string[] = [];
+  const roadColor = '#4a4a4a';
+  const roadColorLight = '#555';
+  const roadColorDark = '#3a3a3a';
+  
+  // Road half-width perpendicular to each direction
+  const hw = w * 0.15; // half width
+  const hh = h * 0.15;
+  
+  if (north) {
+    // Road segment to north edge (top-left)
+    roadSegments.push(`
+      M ${center.x - hw * 0.7} ${center.y - hh * 0.7}
+      L ${w * 0.25 - hw * 0.5} ${h * 0.25 - hh * 0.5}
+      L ${w * 0.25 + hw * 0.5} ${h * 0.25 + hh * 0.5}
+      L ${center.x + hw * 0.7} ${center.y + hh * 0.7}
+      Z
+    `);
+  }
+  
+  if (east) {
+    // Road segment to east edge (top-right)
+    roadSegments.push(`
+      M ${center.x + hw * 0.7} ${center.y - hh * 0.7}
+      L ${w * 0.75 + hw * 0.5} ${h * 0.25 - hh * 0.5}
+      L ${w * 0.75 - hw * 0.5} ${h * 0.25 + hh * 0.5}
+      L ${center.x - hw * 0.7} ${center.y + hh * 0.7}
+      Z
+    `);
+  }
+  
+  if (south) {
+    // Road segment to south edge (bottom-right)
+    roadSegments.push(`
+      M ${center.x + hw * 0.7} ${center.y + hh * 0.7}
+      L ${w * 0.75 + hw * 0.5} ${h * 0.75 + hh * 0.5}
+      L ${w * 0.75 - hw * 0.5} ${h * 0.75 - hh * 0.5}
+      L ${center.x - hw * 0.7} ${center.y - hh * 0.7}
+      Z
+    `);
+  }
+  
+  if (west) {
+    // Road segment to west edge (bottom-left)
+    roadSegments.push(`
+      M ${center.x - hw * 0.7} ${center.y + hh * 0.7}
+      L ${w * 0.25 - hw * 0.5} ${h * 0.75 + hh * 0.5}
+      L ${w * 0.25 + hw * 0.5} ${h * 0.75 - hh * 0.5}
+      L ${center.x + hw * 0.7} ${center.y - hh * 0.7}
+      Z
+    `);
+  }
+  
+  // Center intersection area (always drawn)
+  const centerSize = hw * 1.4;
+  const centerPath = `
+    M ${center.x} ${center.y - centerSize}
+    L ${center.x + centerSize} ${center.y}
+    L ${center.x} ${center.y + centerSize}
+    L ${center.x - centerSize} ${center.y}
+    Z
+  `;
+
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
       <defs>
         <linearGradient id={`roadGrad-${size}`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#525252" />
-          <stop offset="100%" stopColor="#404040" />
+          <stop offset="0%" stopColor="#555" />
+          <stop offset="50%" stopColor="#484848" />
+          <stop offset="100%" stopColor="#3a3a3a" />
         </linearGradient>
       </defs>
+      
+      {/* Base grass under road */}
       <polygon
-        points={getTilePoints(w, h)}
-        fill={`url(#roadGrad-${size})`}
-        stroke="#262626"
+        points={getTilePoints(w)}
+        fill="#3d5a35"
+        stroke="#2d4a26"
         strokeWidth={0.5}
       />
-      <line x1={w * 0.3} y1={h * 0.35} x2={w * 0.7} y2={h * 0.65} stroke="#fbbf24" strokeWidth={1} strokeDasharray="3,4" opacity={0.6} />
+      
+      {/* Road segments */}
+      {roadSegments.map((d, i) => (
+        <path key={i} d={d} fill={`url(#roadGrad-${size})`} />
+      ))}
+      
+      {/* Center intersection */}
+      <path d={centerPath} fill={`url(#roadGrad-${size})`} />
+      
+      {/* Road edges/curbs */}
+      {roadSegments.map((d, i) => (
+        <path key={`edge-${i}`} d={d} fill="none" stroke="#333" strokeWidth={0.5} />
+      ))}
+      <path d={centerPath} fill="none" stroke="#333" strokeWidth={0.5} />
+      
+      {/* Subtle highlight on road surface */}
+      <path d={centerPath} fill="#666" opacity={0.15} />
     </svg>
   );
 };
@@ -909,7 +1024,8 @@ export const BuildingRenderer: React.FC<{
   highlight?: boolean;
   size?: number;
   onFire?: boolean;
-}> = ({ buildingType, level = 1, powered = true, zone = 'none', highlight = false, size = TILE_WIDTH, onFire = false }) => {
+  roadAdjacency?: RoadAdjacency;
+}> = ({ buildingType, level = 1, powered = true, zone = 'none', highlight = false, size = TILE_WIDTH, onFire = false, roadAdjacency }) => {
   const renderBuilding = () => {
     // Check if we have a PNG image for this building type
     const imageConfig = BUILDING_IMAGES[buildingType];
@@ -927,7 +1043,7 @@ export const BuildingRenderer: React.FC<{
       case 'tree':
         return <TreeTile size={size} />;
       case 'road':
-        return <RoadTile size={size} />;
+        return <RoadTile size={size} adjacency={roadAdjacency} />;
       case 'shop_small':
         return <SmallShop size={size} powered={powered} />;
       case 'shop_medium':

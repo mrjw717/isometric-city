@@ -9,7 +9,6 @@ import {
   Tool,
   TOOL_INFO,
   ZoneType,
-  TUTORIAL_STEPS,
 } from '@/types/game';
 import {
   bulldozeTile,
@@ -28,10 +27,7 @@ type GameContextValue = {
   setActivePanel: (panel: GameState['activePanel']) => void;
   setBudgetFunding: (key: keyof Budget, funding: number) => void;
   placeAtTile: (x: number, y: number) => void;
-  completeTutorialStep: () => void;
-  skipTutorial: () => void;
   setDisastersEnabled: (enabled: boolean) => void;
-  restartTutorial: () => void;
   newGame: (name?: string, size?: number) => void;
   hasExistingGame: boolean;
 };
@@ -238,29 +234,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const completeTutorialStep = useCallback(() => {
-    setState((prev) => {
-      const nextStep = Math.min(prev.tutorialStep + 1, TUTORIAL_STEPS.length - 1);
-      const tutorialCompleted = nextStep >= TUTORIAL_STEPS.length - 1;
-      return { ...prev, tutorialStep: nextStep, tutorialCompleted };
-    });
-  }, []);
-
-  const skipTutorial = useCallback(() => {
-    setState((prev) => ({ ...prev, tutorialCompleted: true, activePanel: 'none' }));
-  }, []);
-
   const setDisastersEnabled = useCallback((enabled: boolean) => {
     setState((prev) => ({ ...prev, disastersEnabled: enabled }));
-  }, []);
-
-  const restartTutorial = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      tutorialStep: 0,
-      tutorialCompleted: false,
-      activePanel: 'tutorial',
-    }));
   }, []);
 
   const newGame = useCallback((name?: string, size?: number) => {
@@ -277,10 +252,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setActivePanel,
     setBudgetFunding,
     placeAtTile,
-    completeTutorialStep,
-    skipTutorial,
     setDisastersEnabled,
-    restartTutorial,
     newGame,
     hasExistingGame,
   };

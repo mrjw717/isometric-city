@@ -317,9 +317,7 @@ export function createInitialGameState(size: number = 28, cityName: string = 'Ne
     achievements: createAchievements(),
     advisorMessages: [],
     history: [],
-    activePanel: 'tutorial',
-    tutorialStep: 0,
-    tutorialCompleted: false,
+    activePanel: 'none',
     disastersEnabled: true,
   };
 }

@@ -205,52 +205,9 @@ export interface GameState {
   achievements: Achievement[];
   advisorMessages: AdvisorMessage[];
   history: HistoryPoint[];
-  activePanel: 'none' | 'budget' | 'statistics' | 'advisors' | 'achievements' | 'settings' | 'tutorial';
-  tutorialStep: number;
-  tutorialCompleted: boolean;
+  activePanel: 'none' | 'budget' | 'statistics' | 'advisors' | 'achievements' | 'settings';
   disastersEnabled: boolean;
 }
-
-export interface TutorialStep {
-  title: string;
-  content: string;
-  highlight?: string;
-}
-
-export const TUTORIAL_STEPS: TutorialStep[] = [
-  {
-    title: 'Welcome to IsoCity!',
-    content: 'Build and manage your own thriving metropolis. Zone areas, place buildings, and watch your city grow!',
-  },
-  {
-    title: 'Zoning',
-    content: 'Start by placing Residential zones (green) for homes, Commercial zones (blue) for shops, and Industrial zones (yellow) for factories.',
-  },
-  {
-    title: 'Roads',
-    content: 'Connect zones with roads. Buildings need road access to develop and residents need roads to get to work.',
-  },
-  {
-    title: 'Utilities',
-    content: 'Place Power Plants and Water Towers to supply electricity and water. Buildings without utilities won\'t grow.',
-  },
-  {
-    title: 'Services',
-    content: 'Build Police Stations, Fire Stations, Hospitals, and Schools to keep your citizens safe, healthy, and educated.',
-  },
-  {
-    title: 'Budget & Taxes',
-    content: 'Adjust tax rates and service funding in the Budget panel. Balance income with citizen happiness!',
-  },
-  {
-    title: 'Demand',
-    content: 'Watch the R-C-I demand bars in the top bar. They show what types of zones your city needs.',
-  },
-  {
-    title: 'Ready to Build!',
-    content: 'You\'re ready to start! Remember: a balanced city with good services will thrive. Good luck, Mayor!',
-  },
-];
 
 // Building evolution paths based on zone and level
 export const RESIDENTIAL_BUILDINGS: BuildingType[] = ['house_small', 'house_medium', 'mansion', 'apartment_low', 'apartment_high'];

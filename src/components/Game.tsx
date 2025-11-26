@@ -2,11 +2,9 @@
 
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
-import { BuildingRenderer } from './buildings/IsometricBuildings';
-import { Tool, TOOL_INFO, Tile, TUTORIAL_STEPS } from '@/types/game';
+import { BuildingRenderer, RoadAdjacency } from './buildings/IsometricBuildings';
+import { Tool, TOOL_INFO, Tile } from '@/types/game';
 import {
-  ToolIcons,
-  SelectIcon,
   PlayIcon,
   PauseIcon,
   FastForwardIcon,
@@ -24,11 +22,9 @@ import {
   EducationIcon,
   SafetyIcon,
   EnvironmentIcon,
-  BudgetIcon,
   ChartIcon,
   TrophyIcon,
   AdvisorIcon,
-  SettingsIcon,
   AlertIcon,
   InfoIcon,
 } from './ui/Icons';
@@ -129,13 +125,6 @@ function Sidebar() {
       {/* Logo */}
       <div className="px-4 py-4 border-b border-sidebar-border">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/70 rounded-md flex items-center justify-center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-              <polygon points="12,2 22,8 12,14 2,8" />
-              <polygon points="2,8 12,14 12,22 2,16" opacity="0.7" />
-              <polygon points="22,8 12,14 12,22 22,16" opacity="0.4" />
-            </svg>
-          </div>
           <span className="text-sidebar-foreground font-bold tracking-tight">ISOCITY</span>
         </div>
       </div>
@@ -152,7 +141,6 @@ function Sidebar() {
                 const info = TOOL_INFO[tool];
                 const isSelected = selectedTool === tool;
                 const canAfford = stats.money >= info.cost;
-                const IconComponent = ToolIcons[tool] || SelectIcon;
                 
                 return (
                   <TooltipProvider key={tool}>
@@ -166,7 +154,6 @@ function Sidebar() {
                             isSelected ? 'bg-primary text-primary-foreground' : ''
                           }`}
                         >
-                          <IconComponent size={16} className="flex-shrink-0" />
                           <span className="flex-1 text-left truncate">{info.name}</span>
                           {info.cost > 0 && (
                             <span className="text-xs opacity-60">${info.cost}</span>
@@ -195,9 +182,10 @@ function Sidebar() {
                 <Button
                   onClick={() => setActivePanel(activePanel === 'budget' ? 'none' : 'budget')}
                   variant={activePanel === 'budget' ? 'default' : 'ghost'}
-                  size="icon-sm"
+                  size="sm"
+                  className="w-full"
                 >
-                  <BudgetIcon size={16} />
+                  Budget
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Budget</TooltipContent>
@@ -210,9 +198,10 @@ function Sidebar() {
                 <Button
                   onClick={() => setActivePanel(activePanel === 'statistics' ? 'none' : 'statistics')}
                   variant={activePanel === 'statistics' ? 'default' : 'ghost'}
-                  size="icon-sm"
+                  size="sm"
+                  className="w-full"
                 >
-                  <ChartIcon size={16} />
+                  Stats
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Statistics</TooltipContent>
@@ -225,9 +214,10 @@ function Sidebar() {
                 <Button
                   onClick={() => setActivePanel(activePanel === 'advisors' ? 'none' : 'advisors')}
                   variant={activePanel === 'advisors' ? 'default' : 'ghost'}
-                  size="icon-sm"
+                  size="sm"
+                  className="w-full"
                 >
-                  <AdvisorIcon size={16} />
+                  Advice
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Advisors</TooltipContent>
@@ -240,9 +230,10 @@ function Sidebar() {
                 <Button
                   onClick={() => setActivePanel(activePanel === 'achievements' ? 'none' : 'achievements')}
                   variant={activePanel === 'achievements' ? 'default' : 'ghost'}
-                  size="icon-sm"
+                  size="sm"
+                  className="w-full"
                 >
-                  <TrophyIcon size={16} />
+                  Awards
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Achievements</TooltipContent>
@@ -255,9 +246,10 @@ function Sidebar() {
                 <Button
                   onClick={() => setActivePanel(activePanel === 'settings' ? 'none' : 'settings')}
                   variant={activePanel === 'settings' ? 'default' : 'ghost'}
-                  size="icon-sm"
+                  size="sm"
+                  className="w-full"
                 >
-                  <SettingsIcon size={16} />
+                  Settings
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Settings</TooltipContent>
@@ -998,54 +990,11 @@ function RatingBar({ label, value, color }: { label: string; value: number; colo
   );
 }
 
-// Tutorial Overlay
-function TutorialOverlay() {
-  const { state, completeTutorialStep, skipTutorial } = useGame();
-  const { tutorialStep, tutorialCompleted } = state;
-  
-  if (tutorialCompleted) return null;
-  
-  const currentStep = TUTORIAL_STEPS[tutorialStep] || TUTORIAL_STEPS[0];
-  const isLastStep = tutorialStep >= TUTORIAL_STEPS.length - 1;
-  
-  return (
-    <div className="absolute inset-0 z-[100] pointer-events-none">
-      <div className="absolute inset-0 bg-black/50 pointer-events-auto" onClick={skipTutorial} />
-      
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-auto">
-        <Card className="w-[450px]">
-          <Progress value={((tutorialStep + 1) / TUTORIAL_STEPS.length) * 100} className="h-1 rounded-none rounded-t-lg" />
-          
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Badge variant="outline" className="text-primary">
-                Step {tutorialStep + 1} of {TUTORIAL_STEPS.length}
-              </Badge>
-            </div>
-            
-            <h3 className="text-foreground text-xl font-bold mb-3">{currentStep.title}</h3>
-            <p className="text-muted-foreground leading-relaxed mb-6">{currentStep.content}</p>
-            
-            <div className="flex items-center justify-between">
-              <Button variant="ghost" onClick={skipTutorial}>
-                Skip Tutorial
-              </Button>
-              
-              <Button onClick={completeTutorialStep}>
-                {isLastStep ? 'Start Building!' : 'Next'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
 
 // Settings Panel
 function SettingsPanel() {
-  const { state, setActivePanel, setDisastersEnabled, restartTutorial, newGame } = useGame();
-  const { disastersEnabled, cityName, gridSize, tutorialCompleted } = state;
+  const { state, setActivePanel, setDisastersEnabled, newGame } = useGame();
+  const { disastersEnabled, cityName, gridSize } = state;
   const [newCityName, setNewCityName] = useState(cityName);
   const [showNewGameConfirm, setShowNewGameConfirm] = useState(false);
   
@@ -1098,20 +1047,6 @@ function SettingsPanel() {
               <div className="flex justify-between"><span>View Tile Info</span><span className="text-foreground">Select Tool + Click</span></div>
             </div>
           </div>
-          
-          {/* Tutorial */}
-          {tutorialCompleted && (
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => {
-                restartTutorial();
-                setActivePanel('none');
-              }}
-            >
-              Restart Tutorial
-            </Button>
-          )}
           
           <Separator />
           
@@ -1507,6 +1442,43 @@ function IsometricGrid({ overlayMode }: { overlayMode: OverlayMode }) {
             height: gridHeight,
           }}
         >
+          {/* Base tiles layer - always render grass/base tiles */}
+          {Array.from({ length: gridSize }, (_, y) =>
+            Array.from({ length: gridSize }, (_, x) => {
+              const tile = grid[y][x];
+              const { screenX, screenY } = gridToScreen(x, y, 0, 0);
+              const isHovered = hoveredTile?.x === x && hoveredTile?.y === y;
+              const isSelected = selectedTile?.x === x && selectedTile?.y === y;
+              
+              // Determine base tile type - use grass for zoned tiles, or the building type if it's a base tile
+              const baseBuildingType = tile.building.type === 'water' || tile.building.type === 'road' 
+                ? tile.building.type 
+                : tile.zone !== 'none' 
+                  ? 'empty' // Will render as EmptyZonedTile
+                  : 'grass';
+              
+              return (
+                <div
+                  key={`base-${x}-${y}`}
+                  className="absolute"
+                  style={{
+                    left: screenX,
+                    top: screenY,
+                    zIndex: x + y, // Lower z-index for base layer
+                  }}
+                >
+                  <BuildingRenderer
+                    buildingType={baseBuildingType}
+                    zone={tile.zone}
+                    highlight={isHovered || isSelected}
+                    size={TILE_WIDTH}
+                  />
+                </div>
+              );
+            })
+          )}
+          
+          {/* Buildings layer - render buildings on top of base tiles */}
           {Array.from({ length: gridSize }, (_, y) =>
             Array.from({ length: gridSize }, (_, x) => {
               const tile = grid[y][x];
@@ -1517,6 +1489,12 @@ function IsometricGrid({ overlayMode }: { overlayMode: OverlayMode }) {
               // Building heights for z-offset (buildings render from bottom)
               // Image-based buildings handle their own height via the ImageBuilding component
               const buildingType = tile.building.type;
+              
+              // Skip rendering building if it's a base tile (grass, empty, water, road)
+              // These are already rendered in the base layer
+              if (buildingType === 'grass' || buildingType === 'empty' || buildingType === 'water' || buildingType === 'road') {
+                return null;
+              }
               
               // Buildings that use PNG images have consistent height handling
               const imageBasedBuildings = [
@@ -1537,10 +1515,6 @@ function IsometricGrid({ overlayMode }: { overlayMode: OverlayMode }) {
               
               // For image-based buildings, use a consistent height based on tile size
               const buildingHeights: Record<string, number> = {
-                'grass': 0,
-                'empty': 0,
-                'water': 0,
-                'road': 0,
                 'tree': TILE_HEIGHT * 0.8,
                 // Image-based buildings - height scales with image
                 'house_small': TILE_HEIGHT * 1.5,
@@ -1570,53 +1544,74 @@ function IsometricGrid({ overlayMode }: { overlayMode: OverlayMode }) {
               };
               const heightOffset = buildingHeights[buildingType] || 0;
               
-                              // Determine if this tile needs an overlay (only for developed tiles)
-                              const needsOverlay = overlayMode !== 'none' && 
-                                tile.building.type !== 'grass' && 
-                                tile.building.type !== 'empty' && 
-                                tile.building.type !== 'water' &&
-                                tile.building.type !== 'road' &&
-                                tile.building.type !== 'tree';
-                              
-                              return (
-                                <div
-                                  key={`${x}-${y}`}
-                                  className="absolute"
-                                  style={{
-                                    left: screenX,
-                                    top: screenY - heightOffset,
-                                    // Multi-tile buildings use bottom-right corner for z-index
-                                    zIndex: (x + tileSize - 1) + (y + tileSize - 1),
-                                    transform: isHovered ? 'translateY(-2px)' : undefined,
-                                    filter: tile.building.onFire ? 'brightness(1.3) saturate(1.5)' : isHovered ? 'brightness(1.05)' : undefined,
-                                  }}
-                                >
-                                  <BuildingRenderer
-                                    buildingType={tile.building.type}
-                                    level={tile.building.level}
-                                    powered={tile.building.powered}
-                                    zone={tile.zone}
-                                    highlight={isHovered || isSelected}
-                                    size={TILE_WIDTH}
-                                    onFire={tile.building.onFire}
-                                  />
-                                  {/* Utility overlay */}
-                                  {needsOverlay && (
-                                    <div style={{ position: 'absolute', top: heightOffset, left: 0 }}>
-                                      <UtilityOverlay
-                                        mode={overlayMode}
-                                        x={x}
-                                        y={y}
-                                        powered={tile.building.powered}
-                                        watered={tile.building.watered}
-                                        size={TILE_WIDTH}
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })
-                          )}
+              // Determine if this tile needs an overlay (only for developed tiles)
+              const needsOverlay = overlayMode !== 'none' && 
+                tile.building.type !== 'grass' && 
+                tile.building.type !== 'empty' && 
+                tile.building.type !== 'water' &&
+                tile.building.type !== 'road' &&
+                tile.building.type !== 'tree';
+              
+                              // Calculate road adjacency for road tiles
+                              let roadAdjacency: RoadAdjacency | undefined;
+                              if (buildingType === 'road') {
+                                // Check adjacent tiles for roads
+                                // Grid coords: x increases right, y increases down
+                                // In isometric view: x-1 = north (top-left edge), y-1 = east (top-right edge)
+                                //                   x+1 = south (bottom-right edge), y+1 = west (bottom-left edge)
+                                const hasNorth = x > 0 && grid[y][x - 1]?.building.type === 'road';
+                                const hasEast = y > 0 && grid[y - 1][x]?.building.type === 'road';
+                                const hasSouth = x < gridSize - 1 && grid[y][x + 1]?.building.type === 'road';
+                                const hasWest = y < gridSize - 1 && grid[y + 1][x]?.building.type === 'road';
+                                
+                                roadAdjacency = {
+                                  north: hasNorth,
+                                  east: hasEast,
+                                  south: hasSouth,
+                                  west: hasWest,
+                                };
+                              }
+              
+              return (
+                <div
+                  key={`building-${x}-${y}`}
+                  className="absolute"
+                  style={{
+                    left: screenX,
+                    top: screenY - heightOffset,
+                    // Multi-tile buildings use bottom-right corner for z-index
+                    zIndex: (x + tileSize - 1) + (y + tileSize - 1) + 1000, // Higher z-index for buildings layer
+                    transform: isHovered ? 'translateY(-2px)' : undefined,
+                    filter: tile.building.onFire ? 'brightness(1.3) saturate(1.5)' : isHovered ? 'brightness(1.05)' : undefined,
+                  }}
+                >
+                  <BuildingRenderer
+                    buildingType={tile.building.type}
+                    level={tile.building.level}
+                    powered={tile.building.powered}
+                    zone={tile.zone}
+                    highlight={isHovered || isSelected}
+                    size={TILE_WIDTH}
+                    onFire={tile.building.onFire}
+                    roadAdjacency={roadAdjacency}
+                  />
+                  {/* Utility overlay */}
+                  {needsOverlay && (
+                    <div style={{ position: 'absolute', top: heightOffset, left: 0 }}>
+                      <UtilityOverlay
+                        mode={overlayMode}
+                        x={x}
+                        y={y}
+                        powered={tile.building.powered}
+                        watered={tile.building.watered}
+                        size={TILE_WIDTH}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
                           
                           {/* Coverage preview when placing utilities */}
                           {showCoveragePreview && hoveredTile && (
@@ -1789,15 +1784,10 @@ export default function Game() {
         {state.activePanel === 'advisors' && <AdvisorsPanel />}
         {state.activePanel === 'settings' && <SettingsPanel />}
         
-        {/* Tutorial Overlay */}
-        <TutorialOverlay />
-        
         {/* Controls hint */}
-        {state.tutorialCompleted && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-muted-foreground text-xs">
-            Alt+Drag or Middle-click to pan - Scroll to zoom - Drag to place multiple
-          </div>
-        )}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-muted-foreground text-xs">
+          Alt+Drag or Middle-click to pan - Scroll to zoom - Drag to place multiple
+        </div>
       </div>
     </TooltipProvider>
   );
