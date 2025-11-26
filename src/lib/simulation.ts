@@ -1139,9 +1139,20 @@ export function placeBuilding(
     }
   }
 
+  // Can't place parks on roads
+  if (buildingType === 'park' && tile.building.type === 'road') {
+    return state;
+  }
+
   const newGrid = state.grid.map(row => row.map(t => ({ ...t, building: { ...t.building } })));
 
   if (zone !== null) {
+    // Can't zone over existing buildings (only allow zoning on grass, empty, tree, water, or road)
+    const allowedTypesForZoning: BuildingType[] = ['grass', 'empty', 'tree', 'water', 'road'];
+    if (!allowedTypesForZoning.includes(tile.building.type)) {
+      return state; // Can't zone over existing building
+    }
+    
     // Setting zone
     newGrid[y][x].zone = zone;
     if (zone === 'none') {
